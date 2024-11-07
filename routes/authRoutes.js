@@ -6,9 +6,9 @@ const User = require("../models/user"); // Make sure the path matches your User 
 
 require("dotenv").config();
 
-// Register route
+// Create User
 router.post("/register", async (req, res) => {
-  const { name, email, password, role } = req.body;
+  const { name, email, password, role, profilePictureUrl } = req.body;
 
   try {
     // Check if user already exists
@@ -28,6 +28,7 @@ router.post("/register", async (req, res) => {
       password: hashedPassword,
       role: role || "individual", // Default to "individual" if no role is provided
       createdAt: Date.now(),
+      profilePictureUrl,
     });
 
     await newUser.save();

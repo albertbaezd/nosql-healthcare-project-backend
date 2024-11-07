@@ -25,6 +25,7 @@ const userSchema = new mongoose.Schema({
     default: "individual",
   },
   createdAt: { type: Date, default: Date.now },
+  profilePictureUrl: { type: String },
 });
 
 module.exports = mongoose.model("User", userSchema);
