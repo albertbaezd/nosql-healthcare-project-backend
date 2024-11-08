@@ -28,7 +28,7 @@ app.use("/api/comments", require("./routes/commentsRoutes"));
 
 // healthcareArea Route
 
-app.use("/api/healthcareArea", require("./routes/commentsRoutes"));
+app.use("/api/healthcareArea", require("./routes/healthcareAreaRoutes"));
 
 // Start the server
 const PORT = process.env.PORT || 5000;
