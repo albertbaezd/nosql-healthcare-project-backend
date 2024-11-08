@@ -1,9 +1,14 @@
 const express = require("express");
 const connectDB = require("./config/db");
 const morgan = require("morgan");
+const cors = require("cors");
+
 require("dotenv").config();
 
 const app = express();
+
+// Allow all origins (or you can specify only certain origins)
+app.use(cors());
 
 // Connect to MongoDB
 connectDB();
