@@ -35,6 +35,10 @@ app.use("/api/comments", require("./routes/commentsRoutes"));
 
 app.use("/api/healthcareArea", require("./routes/healthcareAreaRoutes"));
 
+// video Route
+
+app.use("/api/video", require("./routes/videoRoutes"));
+
 // Start the server
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
