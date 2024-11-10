@@ -2,7 +2,7 @@
 const express = require('express');
 const router = express.Router();
 const HealthcareArea = require('../models/healthcareArea');
-const Post = require('../models/Post');
+const Post = require('../models/post');
 
 // Create a new healthcare area
 router.post('/', async (req, res) => {
