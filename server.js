@@ -16,6 +16,12 @@ connectDB();
 // Middleware
 app.use(morgan("dev")); // Log incoming requests (development mode)
 app.use(express.json()); // For parsing JSON
+// Printing time
+app.use((req, res, next) => {
+  const requestTime = new Date().toISOString();
+  console.log(`[${requestTime}] ${req.method} ${req.url}`);
+  next();
+});
 
 // Routes
 app.use("/api/users", require("./routes/userRoutes"));
