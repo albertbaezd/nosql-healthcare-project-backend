@@ -185,4 +185,34 @@ router.get("/area/:areaId", async (req, res) => {
   }
 });
 
+// Get all videos by area
+router.get('/area/:areaId', async (req, res) => {
+    const { areaId } = req.params;
+  
+    try {
+      const videos = await Video.find({ area: areaId }).populate('area');
+      res.json(videos);
+    } catch (error) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  // Get all videos by area with sorting and limit
+router.get('/area/:areaId', async (req, res) => {
+    const { areaId } = req.params;
+    const { limit } = req.query; // Get limit from query params, if provided
+  
+    try {
+      const videos = await Video.find({ area: areaId })
+        .sort({ createdAt: -1 }) // Sort by createdAt in descending order
+        .limit(parseInt(limit) || 10) // Limit results; default to 10 if limit is not specified
+        .populate('area');
+  
+      res.json(videos);
+    } catch (error) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+  
+
 module.exports = router;
