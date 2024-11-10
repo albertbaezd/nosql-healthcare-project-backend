@@ -22,12 +22,6 @@ app.use((req, res, next) => {
   console.log(`[${requestTime}] ${req.method} ${req.url}`);
   next();
 });
-// Printing time
-app.use((req, res, next) => {
-  const requestTime = new Date().toISOString();
-  console.log(`[${requestTime}] ${req.method} ${req.url}`);
-  next();
-});
 
 // Routes
 app.use("/api/users", require("./routes/userRoutes"));
