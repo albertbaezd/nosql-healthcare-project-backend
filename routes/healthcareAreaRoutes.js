@@ -27,18 +27,23 @@ router.post('/', async (req, res) => {
 // Get all healthcare areas
 router.get('/', async (req, res) => {
   try {
-    const healthcareAreas = await HealthcareArea.find().populate('posts');
+    const healthcareAreas = await HealthcareArea.find();  // Fetch all healthcare areas
     res.json(healthcareAreas);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
 });
 
-// Get a specific healthcare area by ID
+
+// Get healthcare area by id
 router.get('/:id', async (req, res) => {
+  const { id } = req.params;  // Get the id from the URL parameter
+
   try {
-    const healthcareArea = await HealthcareArea.findById(req.params.id).populate('posts');
-    if (!healthcareArea) return res.status(404).json({ message: 'Healthcare area not found' });
+    const healthcareArea = await HealthcareArea.findById(id);  // Fetch the healthcare area by id
+    if (!healthcareArea) {
+      return res.status(404).json({ message: 'Healthcare area not found' });  // Return 404 if not found
+    }
     res.json(healthcareArea);
   } catch (error) {
     res.status(500).json({ message: error.message });
