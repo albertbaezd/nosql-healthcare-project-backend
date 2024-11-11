@@ -44,6 +44,10 @@ app.use("/api/healthcareArea", require("./routes/healthcareAreaRoutes"));
 
 app.use("/api/video", require("./routes/videoRoutes"));
 
+// contact message
+
+app.use("/api/contactmessage", require("./routes/contactmessageRoutes"));
+
 // Start the server
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {

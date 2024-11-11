@@ -70,4 +70,19 @@ router.delete('/:id', async (req, res) => {
   }
 });
 
+// Get the latest 5 posts sorted by postDate in descending order
+router.get('/latest', async (req, res) => {
+  try {
+    const posts = await Post.find()
+      .sort({ postDate: -1 })  // Sort by the `postDate` field in descending order
+      .limit(5);  // Limit to 5 posts
+
+    res.json(posts);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+
+
 module.exports = router;
