@@ -26,6 +26,11 @@ const userSchema = new mongoose.Schema({
   },
   createdAt: { type: Date, default: Date.now },
   profilePictureUrl: { type: String },
+  city: { type: String },
+  state: { type: String },
+  description: { type: String },
+  university: { type: String },
+  speciality: { type: String }, // for doctors only
 });
 
 module.exports = mongoose.model("User", userSchema);

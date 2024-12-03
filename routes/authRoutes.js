@@ -8,7 +8,18 @@ require("dotenv").config();
 
 // Create User
 router.post("/register", async (req, res) => {
-  const { name, email, password, role, profilePictureUrl } = req.body;
+  const {
+    name,
+    email,
+    password,
+    role,
+    profilePictureUrl = "",
+    city = "",
+    state = "",
+    description = "",
+    university = "",
+    speciality = "",
+  } = req.body;
 
   try {
     // Check if user already exists
@@ -28,9 +39,13 @@ router.post("/register", async (req, res) => {
       password: hashedPassword,
       role: role || "individual", // Default to "individual" if no role is provided
       createdAt: Date.now(),
-      profilePictureUrl,
+      profilePictureUrl, // Already initialized to an empty string if not provided
+      city,
+      state,
+      description,
+      university,
+      speciality,
     });
-
     await newUser.save();
 
     // Generate JWT token
@@ -38,7 +53,12 @@ router.post("/register", async (req, res) => {
       expiresIn: "1h",
     });
 
-    res.status(201).json({ token, user: { id: newUser._id, name, email } });
+    res
+      .status(201)
+      .json({
+        token,
+        user: { id: newUser._id, name, email, role: newUser.role },
+      });
   } catch (error) {
     res
       .status(500)
