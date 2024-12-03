@@ -34,7 +34,7 @@ router.get("/:id", async (req, res) => {
       city: user.city,
       state: user.state,
       country: user.country,
-      description: user.country,
+      description: user.description,
       university: user.university,
       speciality: user.speciality,
     });
