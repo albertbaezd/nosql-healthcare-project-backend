@@ -1,7 +1,9 @@
 // routes/posts.js
 const express = require("express");
 const router = express.Router();
+
 const Post = require("../models/post");
+
 
 // Create a new post
 router.post("/", async (req, res) => {
@@ -99,6 +101,7 @@ router.delete("/:id", async (req, res) => {
     if (!deletedPost)
       return res.status(404).json({ message: "Post not found" });
     res.json({ message: "Post deleted" });
+
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
