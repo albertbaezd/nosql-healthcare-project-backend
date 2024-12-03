@@ -28,6 +28,7 @@ const userSchema = new mongoose.Schema({
   profilePictureUrl: { type: String },
   city: { type: String },
   state: { type: String },
+  country: { type: String },
   description: { type: String },
   university: { type: String },
   speciality: { type: String }, // for doctors only

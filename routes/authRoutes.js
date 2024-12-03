@@ -16,6 +16,7 @@ router.post("/register", async (req, res) => {
     profilePictureUrl = "",
     city = "",
     state = "",
+    country = "",
     description = "",
     university = "",
     speciality = "",
@@ -42,6 +43,7 @@ router.post("/register", async (req, res) => {
       profilePictureUrl, // Already initialized to an empty string if not provided
       city,
       state,
+      country,
       description,
       university,
       speciality,
@@ -53,12 +55,10 @@ router.post("/register", async (req, res) => {
       expiresIn: "1h",
     });
 
-    res
-      .status(201)
-      .json({
-        token,
-        user: { id: newUser._id, name, email, role: newUser.role },
-      });
+    res.status(201).json({
+      token,
+      user: { id: newUser._id, name, email, role: newUser.role },
+    });
   } catch (error) {
     res
       .status(500)
