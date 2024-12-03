@@ -16,7 +16,6 @@ connectDB();
 // Middleware
 app.use(morgan("dev")); // Log incoming requests (development mode)
 app.use(express.json()); // For parsing JSON
-// Printing time
 app.use((req, res, next) => {
   const requestTime = new Date().toISOString();
   console.log(`[${requestTime}] ${req.method} ${req.url}`);
@@ -40,6 +39,14 @@ app.use("/api/comments", require("./routes/commentsRoutes"));
 // healthcareArea Route
 
 app.use("/api/healthcareArea", require("./routes/healthcareAreaRoutes"));
+
+// video Route
+
+app.use("/api/video", require("./routes/videoRoutes"));
+
+// contact message
+
+app.use("/api/contactmessage", require("./routes/contactmessageRoutes"));
 
 // Start the server
 const PORT = process.env.PORT || 5000;

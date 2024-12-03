@@ -1,17 +1,18 @@
 // routes/comments.js
 const express = require('express');
 const router = express.Router();
-const Comment = require('../models/Comment');
-const Post = require('../models/Post');
+const Comment = require('../models/comment');
+const Post = require('../models/post');
 
 // Create a new comment and associate it with a post
-router.post('/:postId', async (req, res) => {
-  const { authorId, body } = req.body;
-  const postId = req.params.postId;
+router.post('/', async (req, res) => {
+  const { authorId, body, postId } = req.body;
+//const postId = req.params.postId;
 
   const comment = new Comment({
     authorId,
     body,
+    postId
   });
 
   try {
@@ -32,7 +33,7 @@ router.get('/:postId', async (req, res) => {
 
   try {
     const post = await Post.findById(postId).populate('comments');
-    if (!post) return res.status(404).json({ message: 'Post not found' });
+    if (!post) return res.status(404).json({ message: 'comment not found' });
 
     res.json(post.comments);
   } catch (error) {
@@ -78,6 +79,16 @@ router.delete('/comment/:commentId', async (req, res) => {
     await Post.findOneAndUpdate({ comments: commentId }, { $pull: { comments: commentId } });
 
     res.json({ message: 'Comment deleted' });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// Get all comments
+router.get('/', async (req, res) => {
+  try {
+    const comments = await Comment.find();  // Fetch all comments
+    res.json(comments);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
