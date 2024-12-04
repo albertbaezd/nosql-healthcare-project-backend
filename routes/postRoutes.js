@@ -4,7 +4,6 @@ const router = express.Router();
 
 const Post = require("../models/post");
 
-
 // Create a new post
 router.post("/", async (req, res) => {
   const { image, area, title, description, body, createdAt, authorId } =
@@ -101,7 +100,6 @@ router.delete("/:id", async (req, res) => {
     if (!deletedPost)
       return res.status(404).json({ message: "Post not found" });
     res.json({ message: "Post deleted" });
-
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -115,6 +113,73 @@ router.get("/latest", async (req, res) => {
       .limit(5); // Limit to 5 posts
 
     res.json(posts);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// get posts by healthcareareaid
+// router.get("/area/:areaid", async (req, res) => {
+//   try {
+//     const areaid = req.params.areaid;
+
+//     // Find posts where areaId matches the given healthcareAreaId
+//     const posts = await Post.find({ areaId: areaid });
+
+//     if (posts.length === 0) {
+//       return res
+//         .status(404)
+//         .json({ message: "No posts found for this healthcare area" });
+//     }
+
+//     res.status(200).json(posts);
+//   } catch (error) {
+//     res.status(500).json({ message: error.message });
+//   }
+// });
+
+router.get("/area/:areaid", async (req, res) => {
+  try {
+    const areaid = req.params.areaid;
+
+    // Get pagination parameters from the query string, defaulting to page 1 and limit 10
+    const page = parseInt(req.query.page) || 1; // Default to page 1 if not provided
+    const limit = parseInt(req.query.limit); // No default limit
+    const skip = (page - 1) * (limit || 10); // Skip logic, default to 10 posts if limit is not specified
+
+    // Query to find posts by areaId
+    let query = Post.find({ areaId: areaid });
+
+    // Apply pagination if a limit is provided
+    if (limit) {
+      query = query.skip(skip).limit(limit);
+    }
+
+    // Find posts for the healthcare area
+    const posts = await query;
+
+    if (posts.length === 0) {
+      return res
+        .status(404)
+        .json({ message: "No posts found for this healthcare area" });
+    }
+
+    // If limit is provided, calculate total posts and total pages
+    if (limit) {
+      const totalPosts = await Post.countDocuments({ areaId: areaid });
+      const totalPages = Math.ceil(totalPosts / limit);
+
+      return res.status(200).json({
+        page,
+        limit,
+        totalPosts,
+        totalPages,
+        posts,
+      });
+    }
+
+    // If no limit is specified, just return all posts
+    res.status(200).json(posts);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
