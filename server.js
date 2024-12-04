@@ -48,6 +48,11 @@ app.use("/api/video", require("./routes/videoRoutes"));
 
 app.use("/api/contactmessage", require("./routes/contactmessageRoutes"));
 
+// Subscribe Route
+
+app.use("/api/subscribe", require("./routes/subscriberRoutes"));
+
+
 // Start the server
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
