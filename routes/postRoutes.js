@@ -1,7 +1,7 @@
 // routes/posts.js
 const express = require("express");
 const router = express.Router();
-
+const mongoose = require("mongoose");
 const Post = require("../models/post");
 
 // Create a new post
@@ -109,8 +109,6 @@ router.delete("/:id", async (req, res) => {
   }
 });
 
-
-
 // Get the latest 5 posts sorted by postDate in descending order
 router.get("/latest", async (req, res) => {
   try {
@@ -141,9 +139,8 @@ router.get("/latest", async (req, res) => {
 //   }
 // });
 
-
 // Get the most popular posts (this should be defined before the dynamic route)
-router.get('/mostpopular', async (req, res) => {
+router.get("/mostpopular", async (req, res) => {
   try {
     // Fetch all posts from the database
     const posts = await Post.find({});
@@ -191,9 +188,6 @@ router.get("/:id", async (req, res) => {
 //   }
 // });
 
-
-
-
 router.get("/area/:areaid", async (req, res) => {
   try {
     const areaid = req.params.areaid;
@@ -236,6 +230,44 @@ router.get("/area/:areaid", async (req, res) => {
 
     // If no limit is specified, just return all posts
     res.status(200).json(posts);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// Get most popular posts by healthcare area ID
+router.get("/area/:areaid/mostpopular", async (req, res) => {
+  try {
+    const areaid = req.params.areaid;
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const skip = (page - 1) * limit;
+
+    // Use aggregation to get posts by areaId and sort by comments length
+    const posts = await Post.aggregate([
+      { $match: { areaId: new mongoose.Types.ObjectId(areaid) } }, // Use 'new' with ObjectId
+      { $addFields: { commentCount: { $size: "$comments" } } }, // Add a field for the length of the comments array
+      { $sort: { commentCount: -1 } }, // Sort by commentCount in descending order
+      { $skip: skip }, // Skip documents for pagination
+      { $limit: limit }, // Limit documents for pagination
+    ]);
+
+    if (posts.length === 0) {
+      return res
+        .status(404)
+        .json({ message: "No posts found for this healthcare area" });
+    }
+
+    const totalPosts = await Post.countDocuments({ areaId: areaid });
+    const totalPages = Math.ceil(totalPosts / limit);
+
+    return res.status(200).json({
+      page,
+      limit,
+      totalPosts,
+      totalPages,
+      posts,
+    });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
