@@ -31,6 +31,12 @@ router.get("/:id", async (req, res) => {
       role: user.role,
       createdAt: user.createdAt,
       profilePictureUrl: user.profilePictureUrl,
+      city: user.city,
+      state: user.state,
+      country: user.country,
+      description: user.description,
+      university: user.university,
+      speciality: user.speciality,
     });
   } catch (error) {
     res
