@@ -6,17 +6,22 @@ const Post = require("../models/post");
 
 // Create a new post
 router.post("/", async (req, res) => {
-  const { image, area, title, description, body, createdAt, authorId } =
-    req.body;
+  const { image, area, title, description, body, authorId, areaId } = req.body;
+
+  // Set createdAt to the current date and time
+  const createdAt = new Date();
+
   const post = new Post({
     image,
     area,
+    areaId,
     title,
     description,
     body,
     createdAt,
     authorId,
   });
+
   try {
     const savedPost = await post.save();
     res.status(201).json(savedPost);
@@ -24,7 +29,6 @@ router.post("/", async (req, res) => {
     res.status(400).json({ message: error.message });
   }
 });
-
 // Get all posts with support for pagination and limit
 
 /*
@@ -105,8 +109,6 @@ router.delete("/:id", async (req, res) => {
   }
 });
 
-
-
 // Get the latest 5 posts sorted by postDate in descending order
 router.get("/latest", async (req, res) => {
   try {
@@ -137,9 +139,8 @@ router.get("/latest", async (req, res) => {
 //   }
 // });
 
-
 // Get the most popular posts (this should be defined before the dynamic route)
-router.get('/mostpopular', async (req, res) => {
+router.get("/mostpopular", async (req, res) => {
   try {
     // Fetch all posts from the database
     const posts = await Post.find({});
@@ -150,7 +151,9 @@ router.get('/mostpopular', async (req, res) => {
     // Return the sorted posts
     res.status(200).json(posts);
   } catch (error) {
-    res.status(500).json({ message: 'Error fetching posts', error: error.message });
+    res
+      .status(500)
+      .json({ message: "Error fetching posts", error: error.message });
   }
 });
 
@@ -164,7 +167,6 @@ router.get("/:id", async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 });
-
 
 // get posts by healthcareareaid
 // router.get("/area/:areaid", async (req, res) => {
@@ -185,9 +187,6 @@ router.get("/:id", async (req, res) => {
 //     res.status(500).json({ message: error.message });
 //   }
 // });
-
-
-
 
 router.get("/area/:areaid", async (req, res) => {
   try {
