@@ -110,19 +110,8 @@ router.delete("/:id", async (req, res) => {
   }
 });
 
-// // Get all videos by area
-// router.get("/area/:areaId", async (req, res) => {
-//   const { areaId } = req.params;
+// Get videos by area ID
 
-//   try {
-//     const videos = await Video.find({ area: areaId }).populate("area");
-//     res.json(videos);
-//   } catch (error) {
-//     res.status(500).json({ message: error.message });
-//   }
-// });
-
-// Get all videos by area with sorting and limit
 router.get("/area/:areaId", async (req, res) => {
   const { areaId } = req.params;
   const { limit, page, sortOrder } = req.query; // Get limit, page, and sortOrder from query params
@@ -137,95 +126,36 @@ router.get("/area/:areaId", async (req, res) => {
   };
 
   // Apply pagination if limit and page are provided
-  if (limit) {
-    queryOptions.limit = parseInt(limit); // Apply limit if provided
-  }
-
-  if (page) {
-    queryOptions.skip = (parseInt(page) - 1) * parseInt(limit); // Apply skip for pagination if page is provided
-  }
+  const pageNum = page ? parseInt(page) : 1;
+  const limitNum = limit ? parseInt(limit) : 0; // If no limit is provided, fetch all posts
+  const skip = (pageNum - 1) * limitNum;
 
   try {
-    // Find videos for the specified area, applying pagination, sorting, and populating
-    const videos = await Video.find({ area: areaId }, null, queryOptions);
+    // Query to find videos for the specified area, applying pagination, sorting, and populating
+    const query = Video.find({ area: areaId });
 
-    // Return the videos
-    res.json(videos);
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
-});
+    // Apply pagination if limit is specified
+    if (limitNum) {
+      query.skip(skip).limit(limitNum);
+    }
 
-// Get all videos by area
-router.get("/area/:areaId", async (req, res) => {
-  const { areaId } = req.params;
+    // Execute the query
+    const videos = await query;
 
-  try {
-    const videos = await Video.find({ area: areaId }).populate("area");
-    res.json(videos);
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
-});
+    // Calculate the total number of videos for pagination info
+    const totalVideos = await Video.countDocuments({ area: areaId });
 
-// Get all videos by area with sorting and limit
-router.get("/area/:areaId", async (req, res) => {
-  const { areaId } = req.params;
-  const { limit } = req.query; // Get limit from query params, if provided
+    // Calculate totalPages if limit is specified
+    const totalPages = limitNum ? Math.ceil(totalVideos / limitNum) : 1;
 
-  try {
-    const videos = await Video.find({ area: areaId })
-      .sort({ createdAt: -1 }) // Sort by createdAt in descending order
-      .limit(parseInt(limit) || 10) // Limit results; default to 10 if limit is not specified
-      .populate("area");
-
-    res.json(videos);
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
-});
-
-// // Get all videos by area
-// router.get("/area/:areaId", async (req, res) => {
-//   const { areaId } = req.params;
-
-//   try {
-//     const videos = await Video.find({ area: areaId }).populate("area");
-//     res.json(videos);
-//   } catch (error) {
-//     res.status(500).json({ message: error.message });
-//   }
-// });
-
-// Get all videos by area with sorting and limit
-router.get("/area/:areaId", async (req, res) => {
-  const { areaId } = req.params;
-  const { limit, page, sortOrder } = req.query; // Get limit, page, and sortOrder from query params
-
-  // Determine the sort direction: default to descending (-1) if sortOrder is not 'asc'
-  const sortDirection = sortOrder === "asc" ? 1 : -1;
-
-  // Initialize query options
-  const queryOptions = {
-    sort: { createdAt: sortDirection }, // Sorting by createdAt based on sortOrder
-    populate: "area", // Populate the area field
-  };
-
-  // Apply pagination if limit and page are provided
-  if (limit) {
-    queryOptions.limit = parseInt(limit); // Apply limit if provided
-  }
-
-  if (page) {
-    queryOptions.skip = (parseInt(page) - 1) * parseInt(limit); // Apply skip for pagination if page is provided
-  }
-
-  try {
-    // Find videos for the specified area, applying pagination, sorting, and populating
-    const videos = await Video.find({ area: areaId }, null, queryOptions);
-
-    // Return the videos
-    res.json(videos);
+    // Format the response to match the required structure
+    res.json({
+      page: pageNum,
+      limitOrTotal: limitNum || totalVideos, // Shows totalVideos as limit if no limit is applied
+      totalPages,
+      totalVideos,
+      videos,
+    });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
