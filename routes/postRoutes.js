@@ -66,16 +66,16 @@ router.get("/", async (req, res) => {
   }
 });
 
-// Get a specific post by ID
-router.get("/:id", async (req, res) => {
-  try {
-    const post = await Post.findById(req.params.id);
-    if (!post) return res.status(404).json({ message: "Post not found" });
-    res.json(post);
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
-});
+// // Get a specific post by ID                       ESTA COMENTADO PORQUE NO FUNCIONA
+// router.get("/:id", async (req, res) => {
+//   try {
+//     const post = await Post.findById(req.params.id);
+//     if (!post) return res.status(404).json({ message: "Post not found" });
+//     res.json(post);
+//   } catch (error) {
+//     res.status(500).json({ message: error.message });
+//   }
+// });
 
 // Update a post by ID
 router.put("/:id", async (req, res) => {
@@ -105,6 +105,8 @@ router.delete("/:id", async (req, res) => {
   }
 });
 
+
+
 // Get the latest 5 posts sorted by postDate in descending order
 router.get("/latest", async (req, res) => {
   try {
@@ -117,6 +119,52 @@ router.get("/latest", async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 });
+
+// // Get Most Popular Posts (sorted by comment count)          ESTA COMENTADO PORQUE NO FUNCIONA
+// // Correctly define the route for "GetMostPopularPosts"
+// router.get('/mostpopular', async (req, res) => {
+//   try {
+//     // Fetch all posts from the database
+//     const posts = await Post.find({});
+
+//     // Sort posts by the length of the comments array (descending order)
+//     posts.sort((a, b) => b.comments.length - a.comments.length);
+
+//     // Return the sorted posts
+//     res.status(200).json(posts);
+//   } catch (error) {
+//     res.status(500).json({ message: 'Error fetching posts', error: error.message });
+//   }
+// });
+
+
+// Get the most popular posts (this should be defined before the dynamic route)
+router.get('/mostpopular', async (req, res) => {
+  try {
+    // Fetch all posts from the database
+    const posts = await Post.find({});
+
+    // Sort posts by the length of the comments array (descending order)
+    posts.sort((a, b) => b.comments.length - a.comments.length);
+
+    // Return the sorted posts
+    res.status(200).json(posts);
+  } catch (error) {
+    res.status(500).json({ message: 'Error fetching posts', error: error.message });
+  }
+});
+
+// Get a specific post by ID (this should be defined after the specific routes)
+router.get("/:id", async (req, res) => {
+  try {
+    const post = await Post.findById(req.params.id);
+    if (!post) return res.status(404).json({ message: "Post not found" });
+    res.json(post);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
 
 // get posts by healthcareareaid
 // router.get("/area/:areaid", async (req, res) => {
@@ -137,6 +185,9 @@ router.get("/latest", async (req, res) => {
 //     res.status(500).json({ message: error.message });
 //   }
 // });
+
+
+
 
 router.get("/area/:areaid", async (req, res) => {
   try {
