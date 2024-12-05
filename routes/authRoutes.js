@@ -3,7 +3,7 @@ const router = express.Router();
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const User = require("../models/user"); // Make sure the path matches your User model
-const nodemailer = require('nodemailer');
+const nodemailer = require("nodemailer");
 
 require("dotenv").config();
 
@@ -51,25 +51,25 @@ router.post("/register", async (req, res) => {
     });
     await newUser.save();
 
-///// MAIL SEND to Doctors
+    ///// MAIL SEND to Doctors
 
-        // Send an email if the user is a doctor
-        if (role === 'doctor') {
-          // Create a transporter using your email service (e.g., Gmail, SendGrid)
-          const transporter = nodemailer.createTransport({
-            service: 'Gmail', // or any other email service you use
-            auth: {
-              user: process.env.EMAIL_USER, // Your email address
-              pass: process.env.EMAIL_PASSWORD, // Your email password or app password
-            },
-          });
-    
-          // Define email options
-          const mailOptions = {
-            from: process.env.EMAIL_USER,
-            to: email,
-            subject: 'Welcome to SerenitySpace, Dr. ' + name + '!',
-            text:  `Dear Dr. ${name},
+    // Send an email if the user is a doctor
+    if (role === "doctor") {
+      // Create a transporter using your email service (e.g., Gmail, SendGrid)
+      const transporter = nodemailer.createTransport({
+        service: "Gmail", // or any other email service you use
+        auth: {
+          user: process.env.EMAIL_USER, // Your email address
+          pass: process.env.EMAIL_PASSWORD, // Your email password or app password
+        },
+      });
+
+      // Define email options
+      const mailOptions = {
+        from: process.env.EMAIL_USER,
+        to: email,
+        subject: "Welcome to SerenitySpace, Dr. " + name + "!",
+        text: `Dear Dr. ${name},
 
             Thank you for joining SerenitySpace! We are thrilled to have you as part of our community. As a trusted professional in the healthcare industry, we value your contribution and are excited about the opportunity to collaborate with you.
             
@@ -86,35 +86,33 @@ router.post("/register", async (req, res) => {
             Best regards,
             The SerenitySpace Team
             `,
-          };
-    
-          // Send the email
-          await transporter.sendMail(mailOptions);
-        }
+      };
 
-///// END
+      // Send the email
+      await transporter.sendMail(mailOptions);
+    }
 
-///// MAIL SEND to individual
+    ///// END
 
+    ///// MAIL SEND to individual
 
+    // Send an email if the user is a individual
+    if (role === "individual") {
+      // Create a transporter using your email service (e.g., Gmail, SendGrid)
+      const transporter = nodemailer.createTransport({
+        service: "Gmail", // or any other email service you use
+        auth: {
+          user: process.env.EMAIL_USER, // Your email address
+          pass: process.env.EMAIL_PASSWORD, // Your email password or app password
+        },
+      });
 
-        // Send an email if the user is a individual
-        if (role === 'individual') {
-          // Create a transporter using your email service (e.g., Gmail, SendGrid)
-          const transporter = nodemailer.createTransport({
-            service: 'Gmail', // or any other email service you use
-            auth: {
-              user: process.env.EMAIL_USER, // Your email address
-              pass: process.env.EMAIL_PASSWORD, // Your email password or app password
-            },
-          });
-    
-          // Define email options
-          const mailOptions = {
-            from: process.env.EMAIL_USER,
-            to: email,
-            subject: 'Welcome to SerenitySpace, ' + name + '!',
-            text:  `Dear ${name},
+      // Define email options
+      const mailOptions = {
+        from: process.env.EMAIL_USER,
+        to: email,
+        subject: "Welcome to SerenitySpace, " + name + "!",
+        text: `Dear ${name},
 
 Thank you for joining SerenitySpace! We are excited to have you as part of our growing community. Whether you're here to find support, explore resources, or connect with others, we are confident that you'll find great value in what our platform offers.
 
@@ -132,24 +130,26 @@ Thank you once again for joining SerenitySpace. We look forward to supporting yo
 Best regards,  
 The SerenitySpace Team
 `,
-          };
-    
-          // Send the email
-          await transporter.sendMail(mailOptions);
-        }
+      };
 
-///// END
+      // Send the email
+      await transporter.sendMail(mailOptions);
+    }
 
-
+    ///// END
 
     // Generate JWT token
     const token = jwt.sign({ userId: newUser._id }, process.env.JWT_SECRET, {
       expiresIn: "1h",
     });
 
+    // Convert the user document to an object and exclude the password
+    const userWithoutPassword = newUser.toObject();
+    delete userWithoutPassword.password;
+
     res.status(201).json({
       token,
-      user: { id: newUser._id, name, email, role: newUser.role },
+      user: userWithoutPassword,
     });
   } catch (error) {
     res
@@ -180,9 +180,13 @@ router.post("/login", async (req, res) => {
       expiresIn: "1h",
     });
 
+    // Convert Mongoose document to plain object and exclude the password field
+    const userWithoutPassword = user.toObject();
+    delete userWithoutPassword.password;
+
     res.status(200).json({
       token,
-      user: { id: user._id, name: user.name, email: user.email },
+      user: userWithoutPassword,
     });
   } catch (error) {
     res.status(500).json({ message: "Error logging in", error: error.message });
