@@ -281,7 +281,7 @@ router.get("/full/:id", async (req, res) => {
         path: "comments", // Populate the comments array with full comment details
       })
       .populate({
-        path: "authorId", // Populate the authorId field with user details
+        path: "authorId", // Populate the post's authorId field with user details
         select: "name profilePictureUrl role", // Include name, profilePictureUrl, and role
         model: "User", // Referencing the User model
       })
@@ -300,6 +300,16 @@ router.get("/full/:id", async (req, res) => {
         profilePictureUrl: post.authorId.profilePictureUrl || null, // Ensure profilePictureUrl is included
         role: post.authorId.role,
       },
+      comments: post.comments.map((comment) => ({
+        _id: comment._id,
+        body: comment.body,
+        postId: comment.postId,
+        createdAt: comment.createdAt,
+        author: {
+          id: comment.authorId, // Use the authorId directly (no need to populate this from User)
+          authorName: comment.authorName, // Include the authorName field directly from the comment
+        },
+      })),
     };
 
     // Remove the original authorId from the response
