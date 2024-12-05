@@ -18,7 +18,7 @@ router.get("/", isAuth, async (req, res) => {
 });
 
 // Create subscriber
-router.post("/", isAuth, async (req, res) => {
+router.post("/", async (req, res) => {
   const { email } = req.body;
   try {
     // Check if email already exists
@@ -35,38 +35,32 @@ router.post("/", isAuth, async (req, res) => {
     const transporter = nodemailer.createTransport({
       service: "gmail",
       auth: {
-        user: "fordcheggacc@gmail.com",
-        pass: "qcse zaps zqfp vpzu",
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASSWORD,
       },
     });
 
     const mailOptions = {
-      from: "fordcheggacc@gmail.com",
+      from: process.env.EMAIL_USER,
       to: email,
-      subject: "Thank You for Subscribing SerenitySpace Community!",
-      html: `<p>Welcome to our community! Thank you for subscribing to our newsletter.</p>
-
-        <p>We are excited to have you on board. As a valued member, you'll gain access to a wealth of resources designed to keep you informed and empowered in the medical field. Our community offers a wide range of insightful posts, expert articles, and educational videos created by experienced professionals.</p>
-
-        <p>You can explore topics such as the latest medical advancements, health tips, case studies, and professional development insights. Our mission is to provide you with reliable, up-to-date information that supports your personal and professional growth.</p>
-
-        <p>In addition, you will be receiving news and updates periodically, so you'll always stay informed about the latest developments and content available within our community.</p>
-
-        <p>Stay connected, engage with our content, and become part of a network that values learning and collaboration. Together, we aim to create a vibrant environment where knowledge and expertise thrive.</p>
-
-        <p>Thank you again for joining us. We look forward to sharing this journey with you!</p>
-
-        <p>Best regards,<br>Serenity Space Team</p>
-
-        <p><img src="cid:communityImage" alt="Community Logo" style="max-width: 200px; height: auto;" /></p>`, // Adjusted image size to make it smaller
-
-      attachments: [
-        {
-          filename: "0LaCRPi.png",
-          path: "C:/Users/Carlo/Documents/0LaCRPi.png", // Specify the path to your image
-          cid: "communityImage", // Embed image inline using CID
-        },
-      ],
+      subject: "Thank You for Subscribing to SerenitySpace Community!",
+      html: `
+          <p>Welcome to our community! Thank you for subscribing to our newsletter.</p>
+      
+          <p>We are excited to have you on board. As a valued member, you'll gain access to a wealth of resources designed to keep you informed and empowered in the medical field. Our community offers a wide range of insightful posts, expert articles, and educational videos created by experienced professionals.</p>
+      
+          <p>You can explore topics such as the latest medical advancements, health tips, case studies, and professional development insights. Our mission is to provide you with reliable, up-to-date information that supports your personal and professional growth.</p>
+      
+          <p>In addition, you will be receiving news and updates periodically, so you'll always stay informed about the latest developments and content available within our community.</p>
+      
+          <p>Stay connected, engage with our content, and become part of a network that values learning and collaboration. Together, we aim to create a vibrant environment where knowledge and expertise thrive.</p>
+      
+          <p>Thank you again for joining us. We look forward to sharing this journey with you!</p>
+      
+          <p>Best regards,<br>Serenity Space Team</p>
+      
+          <p><img src="https://i.imgur.com/0LaCRPi.png" alt="Community Logo" style="max-width: 200px; height: auto;" /></p> <!-- Image added here -->
+        `,
     };
     await transporter.sendMail(mailOptions);
 
