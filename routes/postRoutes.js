@@ -99,14 +99,35 @@ router.delete("/:id", isAuth, async (req, res) => {
   }
 });
 
-// Get the latest 5 posts sorted by postDate in descending order
 router.get("/latest", async (req, res) => {
   try {
-    const posts = await Post.find()
-      .sort({ postDate: -1 }) // Sort by the `postDate` field in descending order
-      .limit(5); // Limit to 5 posts
+    // Get the limit and page from the query, or use defaults
+    const limit = req.query.limit ? parseInt(req.query.limit) : 5;
+    const page = req.query.page ? parseInt(req.query.page) : 1;
 
-    res.json(posts);
+    // Calculate the skip value based on the page and limit
+    const skip = (page - 1) * limit;
+
+    // Fetch the total number of posts
+    const totalPosts = await Post.countDocuments();
+
+    // Fetch the posts for the current page, sorted by `postDate`
+    const posts = await Post.find()
+      .sort({ postDate: -1 })
+      .skip(skip) // Skip posts based on the current page
+      .limit(limit); // Limit the number of posts fetched
+
+    // Calculate total pages
+    const totalPages = Math.ceil(totalPosts / limit);
+
+    // Send the response with the desired format
+    res.json({
+      page,
+      limitOrTotal: limit || totalPosts, // Shows totalPosts as limit if no limit is applied
+      totalPages,
+      totalPosts,
+      posts,
+    });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -115,14 +136,20 @@ router.get("/latest", async (req, res) => {
 // Get the most popular posts (this should be defined before the dynamic route)
 router.get("/mostpopular", async (req, res) => {
   try {
+    // Get the limit from the query, or use undefined if not provided
+    const limit = req.query.limit ? parseInt(req.query.limit) : undefined;
+
     // Fetch all posts from the database
     const posts = await Post.find({});
 
     // Sort posts by the length of the comments array (descending order)
     posts.sort((a, b) => b.comments.length - a.comments.length);
 
-    // Return the sorted posts
-    res.status(200).json(posts);
+    // If a limit is provided, slice the posts to that limit
+    const limitedPosts = limit ? posts.slice(0, limit) : posts;
+
+    // Return the posts (with or without the limit)
+    res.status(200).json(limitedPosts);
   } catch (error) {
     res
       .status(500)
