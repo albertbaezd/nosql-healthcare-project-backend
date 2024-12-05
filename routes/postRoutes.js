@@ -312,4 +312,42 @@ router.get("/full/:id", async (req, res) => {
   }
 });
 
+// GET post by ID with full comments and author details
+router.get("/full/:id", async (req, res) => {
+  try {
+    const post = await Post.findById(req.params.id)
+      .populate({
+        path: "comments", // Populate the comments array with full comment details
+      })
+      .populate({
+        path: "authorId", // Populate the authorId field with user details
+        select: "name profilePictureUrl role", // Include name, profilePictureUrl, and role
+        model: "User", // Referencing the User model
+      })
+      .exec();
+
+    if (!post) {
+      return res.status(404).json({ message: "Post not found" });
+    }
+
+    // Restructure the response to replace 'authorId' with 'author'
+    const postWithAuthor = {
+      ...post.toObject(),
+      author: {
+        id: post.authorId._id,
+        name: post.authorId.name,
+        profilePictureUrl: post.authorId.profilePictureUrl || null, // Ensure profilePictureUrl is included
+        role: post.authorId.role,
+      },
+    };
+
+    // Remove the original authorId from the response
+    delete postWithAuthor.authorId;
+
+    res.json(postWithAuthor);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Server error" });
+  }
+});
 module.exports = router;
