@@ -273,4 +273,21 @@ router.get("/area/:areaid/mostpopular", async (req, res) => {
   }
 });
 
+  // GET post by ID with full comments
+router.get("/full/:id", async (req, res) => {
+  try {
+    const post = await Post.findById(req.params.id)
+      .populate("comments") // Populate the comments array with full comment details
+      .exec();
+
+    if (!post) {
+      return res.status(404).json({ message: "Post not found" });
+    }
+
+    res.json(post);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Server error" });
+  }
+});
 module.exports = router;
