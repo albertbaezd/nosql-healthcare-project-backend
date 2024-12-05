@@ -47,7 +47,18 @@ router.get("/:id", async (req, res) => {
 
 // Update User By ID
 router.put("/:id", async (req, res) => {
-  const { name, email, role, profilePictureUrl } = req.body;
+  const {
+    name,
+    email,
+    role,
+    profilePictureUrl,
+    city,
+    state,
+    country,
+    description,
+    university,
+    speciality,
+  } = req.body;
 
   try {
     // Find the user by ID
@@ -58,11 +69,17 @@ router.put("/:id", async (req, res) => {
       return res.status(404).json({ message: "User not found" });
     }
 
-    // Update the user fields
+    // Update the user fields if they are provided in the request
     if (name) user.name = name;
     if (email) user.email = email;
     if (role) user.role = role;
     if (profilePictureUrl) user.profilePictureUrl = profilePictureUrl;
+    if (city) user.city = city;
+    if (state) user.state = state;
+    if (country) user.country = country;
+    if (description) user.description = description;
+    if (university) user.university = university;
+    if (speciality) user.speciality = speciality;
 
     // Save the updated user
     await user.save();
@@ -75,6 +92,12 @@ router.put("/:id", async (req, res) => {
       email: user.email,
       role: user.role,
       profilePictureUrl: user.profilePictureUrl,
+      city: user.city,
+      state: user.state,
+      country: user.country,
+      description: user.description,
+      university: user.university,
+      speciality: user.speciality,
     });
   } catch (error) {
     res
