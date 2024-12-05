@@ -3,9 +3,10 @@ const express = require("express");
 const router = express.Router();
 const mongoose = require("mongoose");
 const Post = require("../models/post");
+const isAuth = require("../middleware/isAuth");
 
 // Create a new post
-router.post("/", async (req, res) => {
+router.post("/", isAuth, async (req, res) => {
   const { image, area, title, description, body, authorId, areaId } = req.body;
 
   // Set createdAt to the current date and time
@@ -70,19 +71,8 @@ router.get("/", async (req, res) => {
   }
 });
 
-// // Get a specific post by ID                       ESTA COMENTADO PORQUE NO FUNCIONA
-// router.get("/:id", async (req, res) => {
-//   try {
-//     const post = await Post.findById(req.params.id);
-//     if (!post) return res.status(404).json({ message: "Post not found" });
-//     res.json(post);
-//   } catch (error) {
-//     res.status(500).json({ message: error.message });
-//   }
-// });
-
 // Update a post by ID
-router.put("/:id", async (req, res) => {
+router.put("/:id", isAuth, async (req, res) => {
   try {
     const updatedPost = await Post.findByIdAndUpdate(
       req.params.id,
@@ -98,7 +88,7 @@ router.put("/:id", async (req, res) => {
 });
 
 // Delete a post by ID
-router.delete("/:id", async (req, res) => {
+router.delete("/:id", isAuth, async (req, res) => {
   try {
     const deletedPost = await Post.findByIdAndDelete(req.params.id);
     if (!deletedPost)
@@ -121,23 +111,6 @@ router.get("/latest", async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 });
-
-// // Get Most Popular Posts (sorted by comment count)          ESTA COMENTADO PORQUE NO FUNCIONA
-// // Correctly define the route for "GetMostPopularPosts"
-// router.get('/mostpopular', async (req, res) => {
-//   try {
-//     // Fetch all posts from the database
-//     const posts = await Post.find({});
-
-//     // Sort posts by the length of the comments array (descending order)
-//     posts.sort((a, b) => b.comments.length - a.comments.length);
-
-//     // Return the sorted posts
-//     res.status(200).json(posts);
-//   } catch (error) {
-//     res.status(500).json({ message: 'Error fetching posts', error: error.message });
-//   }
-// });
 
 // Get the most popular posts (this should be defined before the dynamic route)
 router.get("/mostpopular", async (req, res) => {
@@ -188,6 +161,7 @@ router.get("/:id", async (req, res) => {
 //   }
 // });
 
+// Get area by ID
 router.get("/area/:areaid", async (req, res) => {
   try {
     const areaid = req.params.areaid;
