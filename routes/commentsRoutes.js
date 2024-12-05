@@ -4,9 +4,10 @@ const router = express.Router();
 const Comment = require("../models/comment");
 const Post = require("../models/post");
 const User = require("../models/user");
+const isAuth = require("../middleware/isAuth");
 
 // Create a new comment and associate it with a post
-router.post("/", async (req, res) => {
+router.post("/", isAuth, async (req, res) => {
   const { authorId, body, postId } = req.body;
 
   try {
@@ -66,7 +67,7 @@ router.get("/comment/:commentId", async (req, res) => {
 });
 
 // Update a comment by ID
-router.put("/comment/:commentId", async (req, res) => {
+router.put("/comment/:commentId", isAuth, async (req, res) => {
   try {
     const updatedComment = await Comment.findByIdAndUpdate(
       req.params.commentId,
@@ -82,7 +83,7 @@ router.put("/comment/:commentId", async (req, res) => {
 });
 
 // Delete a comment by ID and remove it from the associated post
-router.delete("/comment/:commentId", async (req, res) => {
+router.delete("/comment/:commentId", isAuth, async (req, res) => {
   try {
     const commentId = req.params.commentId;
     const deletedComment = await Comment.findByIdAndDelete(commentId);

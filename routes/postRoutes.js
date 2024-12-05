@@ -3,9 +3,10 @@ const express = require("express");
 const router = express.Router();
 const mongoose = require("mongoose");
 const Post = require("../models/post");
+const isAuth = require("../middleware/isAuth");
 
 // Create a new post
-router.post("/", async (req, res) => {
+router.post("/", isAuth, async (req, res) => {
   const { image, area, title, description, body, authorId, areaId } = req.body;
 
   // Set createdAt to the current date and time
@@ -70,19 +71,8 @@ router.get("/", async (req, res) => {
   }
 });
 
-// // Get a specific post by ID                       ESTA COMENTADO PORQUE NO FUNCIONA
-// router.get("/:id", async (req, res) => {
-//   try {
-//     const post = await Post.findById(req.params.id);
-//     if (!post) return res.status(404).json({ message: "Post not found" });
-//     res.json(post);
-//   } catch (error) {
-//     res.status(500).json({ message: error.message });
-//   }
-// });
-
 // Update a post by ID
-router.put("/:id", async (req, res) => {
+router.put("/:id", isAuth, async (req, res) => {
   try {
     const updatedPost = await Post.findByIdAndUpdate(
       req.params.id,
@@ -98,7 +88,7 @@ router.put("/:id", async (req, res) => {
 });
 
 // Delete a post by ID
-router.delete("/:id", async (req, res) => {
+router.delete("/:id", isAuth, async (req, res) => {
   try {
     const deletedPost = await Post.findByIdAndDelete(req.params.id);
     if (!deletedPost)
@@ -109,47 +99,57 @@ router.delete("/:id", async (req, res) => {
   }
 });
 
-// Get the latest 5 posts sorted by postDate in descending order
 router.get("/latest", async (req, res) => {
   try {
-    const posts = await Post.find()
-      .sort({ postDate: -1 }) // Sort by the `postDate` field in descending order
-      .limit(5); // Limit to 5 posts
+    // Get the limit and page from the query, or use defaults
+    const limit = req.query.limit ? parseInt(req.query.limit) : 5;
+    const page = req.query.page ? parseInt(req.query.page) : 1;
 
-    res.json(posts);
+    // Calculate the skip value based on the page and limit
+    const skip = (page - 1) * limit;
+
+    // Fetch the total number of posts
+    const totalPosts = await Post.countDocuments();
+
+    // Fetch the posts for the current page, sorted by `postDate`
+    const posts = await Post.find()
+      .sort({ postDate: -1 })
+      .skip(skip) // Skip posts based on the current page
+      .limit(limit); // Limit the number of posts fetched
+
+    // Calculate total pages
+    const totalPages = Math.ceil(totalPosts / limit);
+
+    // Send the response with the desired format
+    res.json({
+      page,
+      limitOrTotal: limit || totalPosts, // Shows totalPosts as limit if no limit is applied
+      totalPages,
+      totalPosts,
+      posts,
+    });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
 });
 
-// // Get Most Popular Posts (sorted by comment count)          ESTA COMENTADO PORQUE NO FUNCIONA
-// // Correctly define the route for "GetMostPopularPosts"
-// router.get('/mostpopular', async (req, res) => {
-//   try {
-//     // Fetch all posts from the database
-//     const posts = await Post.find({});
-
-//     // Sort posts by the length of the comments array (descending order)
-//     posts.sort((a, b) => b.comments.length - a.comments.length);
-
-//     // Return the sorted posts
-//     res.status(200).json(posts);
-//   } catch (error) {
-//     res.status(500).json({ message: 'Error fetching posts', error: error.message });
-//   }
-// });
-
 // Get the most popular posts (this should be defined before the dynamic route)
 router.get("/mostpopular", async (req, res) => {
   try {
+    // Get the limit from the query, or use undefined if not provided
+    const limit = req.query.limit ? parseInt(req.query.limit) : undefined;
+
     // Fetch all posts from the database
     const posts = await Post.find({});
 
     // Sort posts by the length of the comments array (descending order)
     posts.sort((a, b) => b.comments.length - a.comments.length);
 
-    // Return the sorted posts
-    res.status(200).json(posts);
+    // If a limit is provided, slice the posts to that limit
+    const limitedPosts = limit ? posts.slice(0, limit) : posts;
+
+    // Return the posts (with or without the limit)
+    res.status(200).json(limitedPosts);
   } catch (error) {
     res
       .status(500)
@@ -188,6 +188,7 @@ router.get("/:id", async (req, res) => {
 //   }
 // });
 
+// Get area by ID
 router.get("/area/:areaid", async (req, res) => {
   try {
     const areaid = req.params.areaid;

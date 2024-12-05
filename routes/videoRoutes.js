@@ -2,9 +2,10 @@
 const express = require("express");
 const router = express.Router();
 const Video = require("../models/video");
+const isAuth = require("../middleware/isAuth");
 
 // Create a new video
-router.post("/", async (req, res) => {
+router.post("/", isAuth, async (req, res) => {
   const { title, description, thumbnail, area, videoId } = req.body;
 
   const video = new Video({
@@ -23,7 +24,6 @@ router.post("/", async (req, res) => {
   }
 });
 
-// Get all videos
 // Get all videos with pagination and sorting
 router.get("/", async (req, res) => {
   const { limit, page, sortOrder, sortBy } = req.query; // Get limit, page, sortOrder, and sortBy from query params
@@ -83,7 +83,7 @@ router.get("/:id", async (req, res) => {
 });
 
 // Update a video by ID
-router.put("/:id", async (req, res) => {
+router.put("/:id", isAuth, async (req, res) => {
   try {
     const updatedVideo = await Video.findByIdAndUpdate(
       req.params.id,
@@ -99,7 +99,7 @@ router.put("/:id", async (req, res) => {
 });
 
 // Delete a video by ID
-router.delete("/:id", async (req, res) => {
+router.delete("/:id", isAuth, async (req, res) => {
   try {
     const deletedVideo = await Video.findByIdAndDelete(req.params.id);
     if (!deletedVideo)

@@ -1,9 +1,10 @@
 const express = require("express");
 const router = express.Router();
 const User = require("../models/user");
+const isAuth = require("../middleware/isAuth");
 
-// GetAllUsers
-router.get("/", async (req, res) => {
+// Get All Users
+router.get("/", isAuth, async (req, res) => {
   try {
     const users = await User.find();
     res.json(users);
@@ -13,7 +14,7 @@ router.get("/", async (req, res) => {
 });
 
 // Get User By ID
-router.get("/:id", async (req, res) => {
+router.get("/:id", isAuth, async (req, res) => {
   try {
     // Find user by ID
     const user = await User.findById(req.params.id);
@@ -46,7 +47,7 @@ router.get("/:id", async (req, res) => {
 });
 
 // Update User By ID
-router.put("/:id", async (req, res) => {
+router.put("/:id", isAuth, async (req, res) => {
   const {
     name,
     email,
@@ -107,7 +108,7 @@ router.put("/:id", async (req, res) => {
 });
 
 // Delete User by ID
-router.delete("/:id", async (req, res) => {
+router.delete("/:id", isAuth, async (req, res) => {
   try {
     // Find and delete the user by ID
     const user = await User.findByIdAndDelete(req.params.id);
