@@ -9,7 +9,8 @@ const postSchema = new mongoose.Schema({
   title: String,
   description: String,
   body: String,
-  createdAt: Date,
+  //createdAt: Date,
+  createdAt: { type: Date, default: Date.now },
   authorId: String,
   postDate: { type: Date, default: Date.now },
   comments: [
