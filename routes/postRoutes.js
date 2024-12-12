@@ -199,7 +199,7 @@ router.get("/area/:areaid", async (req, res) => {
     const limit = parseInt(req.query.limit);
     const skip = (page - 1) * (limit || 10);
 
-    let query = Post.find({ areaId: areaid });
+    let query = Post.find({ areaId: areaid }).sort({ createdAt: -1 }); // Sort posts by createdAt descending (newest first)
 
     if (limit) {
       query = query.skip(skip).limit(limit);
