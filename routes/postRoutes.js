@@ -110,16 +110,29 @@ router.get("/latest", async (req, res) => {
     const posts = await Post.find()
       .sort({ postDate: -1 })
       .skip(skip)
-      .limit(limit);
+      .limit(limit)
+      .populate("authorId", "name _id profilePictureUrl"); // Populate authorId with specified fields
 
     const totalPages = Math.ceil(totalPosts / limit);
+
+    const formattedPosts = posts.map((post) => {
+      const { authorId, ...postWithoutAuthorId } = post.toObject(); // Remove authorId
+      return {
+        ...postWithoutAuthorId,
+        author: {
+          name: authorId.name,
+          id: authorId._id,
+          profilePicture: authorId.profilePictureUrl, // Add profilePicture
+        },
+      };
+    });
 
     res.json({
       page,
       limitOrTotal: limit || totalPosts,
       totalPages,
       totalPosts,
-      posts,
+      posts: formattedPosts,
     });
   } catch (error) {
     res.status(500).json({ message: error.message });
