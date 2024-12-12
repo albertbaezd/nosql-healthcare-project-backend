@@ -30,8 +30,8 @@ router.post("/", isAuth, async (req, res) => {
     res.status(400).json({ message: error.message });
   }
 });
-// Get all posts with support for pagination and limit
 
+// Get all posts with support for pagination and limit
 /*
 /api/posts → returns all posts.
 /api/posts?limit=10 → returns the first 10 posts.
@@ -99,34 +99,40 @@ router.delete("/:id", isAuth, async (req, res) => {
   }
 });
 
+// Get latest posts
 router.get("/latest", async (req, res) => {
   try {
-    // Get the limit and page from the query, or use defaults
     const limit = req.query.limit ? parseInt(req.query.limit) : 5;
     const page = req.query.page ? parseInt(req.query.page) : 1;
-
-    // Calculate the skip value based on the page and limit
     const skip = (page - 1) * limit;
 
-    // Fetch the total number of posts
     const totalPosts = await Post.countDocuments();
-
-    // Fetch the posts for the current page, sorted by `postDate`
     const posts = await Post.find()
       .sort({ postDate: -1 })
-      .skip(skip) // Skip posts based on the current page
-      .limit(limit); // Limit the number of posts fetched
+      .skip(skip)
+      .limit(limit)
+      .populate("authorId", "name _id profilePictureUrl"); // Populate authorId with specified fields
 
-    // Calculate total pages
     const totalPages = Math.ceil(totalPosts / limit);
 
-    // Send the response with the desired format
+    const formattedPosts = posts.map((post) => {
+      const { authorId, ...postWithoutAuthorId } = post.toObject(); // Remove authorId
+      return {
+        ...postWithoutAuthorId,
+        author: {
+          name: authorId.name,
+          id: authorId._id,
+          profilePicture: authorId.profilePictureUrl, // Add profilePicture
+        },
+      };
+    });
+
     res.json({
       page,
-      limitOrTotal: limit || totalPosts, // Shows totalPosts as limit if no limit is applied
+      limitOrTotal: limit || totalPosts,
       totalPages,
       totalPosts,
-      posts,
+      posts: formattedPosts,
     });
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -136,19 +142,17 @@ router.get("/latest", async (req, res) => {
 // Get the most popular posts (this should be defined before the dynamic route)
 router.get("/mostpopular", async (req, res) => {
   try {
-    // Get the limit from the query, or use undefined if not provided
     const limit = req.query.limit ? parseInt(req.query.limit) : undefined;
 
-    // Fetch all posts from the database
     const posts = await Post.find({});
 
-    // Sort posts by the length of the comments array (descending order)
+    // Sort posts by the number of comments in descending order
     posts.sort((a, b) => b.comments.length - a.comments.length);
 
-    // If a limit is provided, slice the posts to that limit
+    // Apply limit
     const limitedPosts = limit ? posts.slice(0, limit) : posts;
 
-    // Return the posts (with or without the limit)
+    // Return the posts (either limited or all)
     res.status(200).json(limitedPosts);
   } catch (error) {
     res
@@ -168,40 +172,21 @@ router.get("/:id", async (req, res) => {
   }
 });
 
-// get posts by healthcareareaid
-// router.get("/area/:areaid", async (req, res) => {
-//   try {
-//     const areaid = req.params.areaid;
-
-//     // Find posts where areaId matches the given healthcareAreaId
-//     const posts = await Post.find({ areaId: areaid });
-
-//     if (posts.length === 0) {
-//       return res
-//         .status(404)
-//         .json({ message: "No posts found for this healthcare area" });
-//     }
-
-//     res.status(200).json(posts);
-//   } catch (error) {
-//     res.status(500).json({ message: error.message });
-//   }
-// });
-
 // Get area by ID
+// Get pagination parameters from the query string, defaulting to page 1 and limit 10
+// Default to page 1 if not provided
+// Skip logic, default to 10 posts if limit is not specified
+
 router.get("/area/:areaid", async (req, res) => {
   try {
     const areaid = req.params.areaid;
 
-    // Get pagination parameters from the query string, defaulting to page 1 and limit 10
-    const page = parseInt(req.query.page) || 1; // Default to page 1 if not provided
-    const limit = parseInt(req.query.limit); // No default limit
-    const skip = (page - 1) * (limit || 10); // Skip logic, default to 10 posts if limit is not specified
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit);
+    const skip = (page - 1) * (limit || 10);
 
-    // Query to find posts by areaId
     let query = Post.find({ areaId: areaid });
 
-    // Apply pagination if a limit is provided
     if (limit) {
       query = query.skip(skip).limit(limit);
     }
@@ -229,7 +214,7 @@ router.get("/area/:areaid", async (req, res) => {
       });
     }
 
-    // If no limit is specified, just return all posts
+    // Returning all posts as an else
     res.status(200).json(posts);
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -246,11 +231,11 @@ router.get("/area/:areaid/mostpopular", async (req, res) => {
 
     // Use aggregation to get posts by areaId and sort by comments length
     const posts = await Post.aggregate([
-      { $match: { areaId: new mongoose.Types.ObjectId(areaid) } }, // Use 'new' with ObjectId
+      { $match: { areaId: new mongoose.Types.ObjectId(areaid) } },
       { $addFields: { commentCount: { $size: "$comments" } } }, // Add a field for the length of the comments array
       { $sort: { commentCount: -1 } }, // Sort by commentCount in descending order
-      { $skip: skip }, // Skip documents for pagination
-      { $limit: limit }, // Limit documents for pagination
+      { $skip: skip },
+      { $limit: limit },
     ]);
 
     if (posts.length === 0) {
@@ -279,12 +264,12 @@ router.get("/full/:id", async (req, res) => {
   try {
     const post = await Post.findById(req.params.id)
       .populate({
-        path: "comments", // Populate the comments array with full comment details
+        path: "comments", // Comment details
       })
       .populate({
-        path: "authorId", // Populate the post's authorId field with user details
-        select: "name profilePictureUrl role", // Include name, profilePictureUrl, and role
-        model: "User", // Referencing the User model
+        path: "authorId", // User details
+        select: "name profilePictureUrl role",
+        model: "User",
       })
       .exec();
 
@@ -292,13 +277,13 @@ router.get("/full/:id", async (req, res) => {
       return res.status(404).json({ message: "Post not found" });
     }
 
-    // Restructure the response to replace 'authorId' with 'author'
+    // Replacing 'authorId' with 'author' for the frontend
     const postWithAuthor = {
       ...post.toObject(),
       author: {
         id: post.authorId._id,
         name: post.authorId.name,
-        profilePictureUrl: post.authorId.profilePictureUrl || null, // Ensure profilePictureUrl is included
+        profilePictureUrl: post.authorId.profilePictureUrl || null,
         role: post.authorId.role,
       },
       comments: post.comments.map((comment) => ({
@@ -307,7 +292,7 @@ router.get("/full/:id", async (req, res) => {
         postId: comment.postId,
         createdAt: comment.createdAt,
         author: {
-          id: comment.authorId, // Use the authorId directly (no need to populate this from User)
+          id: comment.authorId,
           authorName: comment.authorName, // Include the authorName field directly from the comment
         },
       })),
