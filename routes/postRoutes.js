@@ -191,8 +191,11 @@ router.get("/area/:areaid", async (req, res) => {
       query = query.skip(skip).limit(limit);
     }
 
-    // Find posts for the healthcare area
-    const posts = await query;
+    // Find posts for the healthcare area and populate the authorId field
+    const posts = await query.populate(
+      "authorId",
+      "name _id profilePictureUrl"
+    );
 
     if (posts.length === 0) {
       return res
@@ -205,23 +208,54 @@ router.get("/area/:areaid", async (req, res) => {
       const totalPosts = await Post.countDocuments({ areaId: areaid });
       const totalPages = Math.ceil(totalPosts / limit);
 
+      // Format the posts to include author data
+      const formattedPosts = posts.map((post) => {
+        const { authorId, ...postWithoutAuthorId } = post.toObject(); // Remove authorId
+        return {
+          ...postWithoutAuthorId,
+          author: authorId
+            ? {
+                name: authorId.name || "Unknown", // Default value if name is not available
+                id: authorId._id,
+                profilePicture: authorId.profilePictureUrl || "", // Default empty string if profilePicture is missing
+              }
+            : { name: "Unknown", id: null, profilePicture: "" }, // Default values if authorId is null
+        };
+      });
+
       return res.status(200).json({
         page,
         limit,
         totalPosts,
         totalPages,
-        posts,
+        posts: formattedPosts,
       });
     }
 
-    // Returning all posts as an else
-    res.status(200).json(posts);
+    // Returning all posts as an else and formatting them similarly
+    const formattedPosts = posts.map((post) => {
+      const { authorId, ...postWithoutAuthorId } = post.toObject();
+      return {
+        ...postWithoutAuthorId,
+        author: authorId
+          ? {
+              name: authorId.name || "Unknown",
+              id: authorId._id,
+              profilePicture: authorId.profilePictureUrl || "",
+            }
+          : { name: "Unknown", id: null, profilePicture: "" },
+      };
+    });
+
+    res.status(200).json(formattedPosts);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
 });
 
 // Get most popular posts by healthcare area ID
+// Test 1 get most popoular posts by healthcare area ID
+
 router.get("/area/:areaid/mostpopular", async (req, res) => {
   try {
     const areaid = req.params.areaid;
@@ -244,6 +278,34 @@ router.get("/area/:areaid/mostpopular", async (req, res) => {
         .json({ message: "No posts found for this healthcare area" });
     }
 
+    // Populate the authorId field with name, _id, and profilePictureUrl
+    const populatedPosts = await Post.populate(posts, {
+      path: "authorId",
+      select: "name _id profilePictureUrl",
+    });
+
+    // Filter out posts without an author
+    const postsWithAuthors = populatedPosts.filter(
+      (post) => post.authorId !== null
+    );
+
+    if (postsWithAuthors.length === 0) {
+      return res.status(404).json({ message: "No posts found with authors" });
+    }
+
+    // Format the posts to include the author object
+    const formattedPosts = postsWithAuthors.map((post) => {
+      const { authorId, ...postWithoutAuthorId } = post; // Directly access properties since it's no longer a Mongoose document
+      return {
+        ...postWithoutAuthorId,
+        author: {
+          name: authorId.name,
+          id: authorId._id,
+          profilePicture: authorId.profilePictureUrl,
+        },
+      };
+    });
+
     const totalPosts = await Post.countDocuments({ areaId: areaid });
     const totalPages = Math.ceil(totalPosts / limit);
 
@@ -252,7 +314,7 @@ router.get("/area/:areaid/mostpopular", async (req, res) => {
       limit,
       totalPosts,
       totalPages,
-      posts,
+      posts: formattedPosts,
     });
   } catch (error) {
     res.status(500).json({ message: error.message });
