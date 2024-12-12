@@ -102,34 +102,46 @@ router.delete("/:id", isAuth, async (req, res) => {
 // Get latest posts
 router.get("/latest", async (req, res) => {
   try {
-    const limit = req.query.limit ? parseInt(req.query.limit) : 5;
+    const limit = req.query.limit ? parseInt(req.query.limit) : 6;
     const page = req.query.page ? parseInt(req.query.page) : 1;
     const skip = (page - 1) * limit;
 
-    const totalPosts = await Post.countDocuments();
-    const posts = await Post.find()
+    // Count posts with valid authors
+    const totalPosts = await Post.countDocuments({
+      authorId: { $ne: null }, // Ensure authorId is not null
+    });
+
+    // Fetch posts with valid authors
+    const posts = await Post.find({ authorId: { $ne: null } }) // Filter out null authorId
       .sort({ postDate: -1 })
       .skip(skip)
       .limit(limit)
-      .populate("authorId", "name _id profilePictureUrl"); // Populate authorId with specified fields
+      .populate({
+        path: "authorId",
+        select: "name _id profilePictureUrl",
+        match: { name: { $exists: true } }, // Filter only authors with a name
+      });
+
+    // Filter out posts where the authorId was not populated
+    const filteredPosts = posts.filter((post) => post.authorId);
 
     const totalPages = Math.ceil(totalPosts / limit);
 
-    const formattedPosts = posts.map((post) => {
-      const { authorId, ...postWithoutAuthorId } = post.toObject(); // Remove authorId
+    const formattedPosts = filteredPosts.map((post) => {
+      const { authorId, ...postWithoutAuthorId } = post.toObject();
       return {
         ...postWithoutAuthorId,
         author: {
           name: authorId.name,
           id: authorId._id,
-          profilePicture: authorId.profilePictureUrl, // Add profilePicture
+          profilePicture: authorId.profilePictureUrl,
         },
       };
     });
 
     res.json({
       page,
-      limitOrTotal: limit || totalPosts,
+      limit,
       totalPages,
       totalPosts,
       posts: formattedPosts,
@@ -138,6 +150,8 @@ router.get("/latest", async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 });
+
+
 
 // Get the most popular posts (this should be defined before the dynamic route)
 router.get("/mostpopular", async (req, res) => {
