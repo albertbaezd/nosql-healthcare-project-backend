@@ -19,7 +19,9 @@ router.get("/", isAuth, async (req, res) => {
 
 // Create subscriber
 router.post("/", async (req, res) => {
-  const { email } = req.body;
+  let { email } = req.body;
+  email = email.trim().toLowerCase(); // Convert email to lowercase and trim whitespace
+
   try {
     // Check if email already exists
     const existingSubscriber = await Subscriber.findOne({ email });
